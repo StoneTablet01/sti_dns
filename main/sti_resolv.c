@@ -55,10 +55,6 @@
  *
  * Jim Sutton made the code work on the ESP32 chip. Big Problem
  * was how IP addresses were stored
- * Nest step continued cleanup
-
-
-
  */
 
 #include <string.h>
@@ -90,74 +86,34 @@
 #define DNS_SERVER_PORT 53
 #endif
 
-
-#define MESSAGE_HEADER_LEN 12
-#define MESSAGE_RESPONSE 1
-#define MESSAGE_T_SRV 33
-#define MESSAGE_C_IN 1
-
-#define MAX_DOMAIN_LEN 25
+#define DNS_FLAG1_RD 0x01 // DNS recursion requested
 
 /** @brief The DNS message header. \n
-  The DNS header is 12 8-bit bytes and is defined in RFC-1035\n
+  The DNS header is 12 x 8-bit bytes and is defined in RFC-1035\n
   The header is used to send queries to DNS server. The header is also part of
   the answer returned by the DNS server.
   @note order of the fields in the struct must not be changed as the struct is used as
   an overlay that allows information to be extracted from the returned answer buffer*/
-typedef struct s_dns_hdr {
+typedef struct s_RFC1035_HDR {
   u16_t id; /**< ID Number of the request */
   u8_t flags1; /**< Flags for QR| Opcode |AA|TC|RD */
   u8_t flags2; /**< Flags for RA| Z | RCODE | */
-#define DNS_FLAG1_RESPONSE        0x80
-#define DNS_FLAG1_OPCODE_STATUS   0x10
-#define DNS_FLAG1_OPCODE_INVERSE  0x08
-#define DNS_FLAG1_OPCODE_STANDARD 0x00
-#define DNS_FLAG1_AUTHORATIVE     0x04
-#define DNS_FLAG1_TRUNC           0x02
-#define DNS_FLAG1_RD              0x01
-#define DNS_FLAG2_RA              0x80
-#define DNS_FLAG2_ERR_MASK        0x0f
-#define DNS_FLAG2_ERR_NONE        0x00
-#define DNS_FLAG2_ERR_NAME        0x03
-  u16_t numquestions; /**< Number of questions asked of DNS server */
-  u16_t numanswers; /**< Number of answers from DNS server */
-  u16_t numauthrr; /**< number of name server resource records in the authority records*/
-  u16_t numextrarr; /** Number of extra records in the reply */
-} DNS_HDR;
-
-/** DNS answer message structure for "A" type record requests.
-  The DNS answer starts with either a domain name or a pointer
-  to a name already present somewhere in the packet (buffer). After the name, additional
-  data follows. The purpose of this structure is to extract this information by using
-  the structure as an overlay on the buffer received from the DNS Server. Details of
-  the order and type of the data are defined in RFC-1035.
-  @note This structure can only be used on Class 1 Type 1 requests which return a 4 character
-  IP address.
-  @note order of the fields in the struct must not be changed as the struct is used as
-  an overlay that allows information to be extracted from the returned answer buffer*
-  @note all multi-byte data in the buffer is organized as high order byte / low
-  order byte (BIG ENDIAN). Adjustments must be made using the htons or ntohs fucncitons
-  to allow use on both Big and Little Endian machines.*/
-typedef struct s_dns_answer {
-  u16_t type; /**< specifies the meaning of the data in the RDATA field. */
-  u16_t class; /**< Class 0x0001 represents Internet addresses */
-  u16_t ttl[2]; /**< The number of seconds the results can be cached */
-  u16_t len; /**< The length of the RDATA field. Four (4) for IP4 addresses */
-  char ipchars[4]; /**< IPaddr organized as four addresses (ie. 192.168.1.1) in BE format */
-} DNS_ANSWER;
-
+  u16_t qdcount; /**< number of entries in the question section */
+  u16_t ancount; /**< number of resource records in the answer section */
+  u16_t nscount; /**< no. of name server resource records in the authority records*/
+  u16_t arcount; /**< number of resource records in the additional records section */
+} RFC1035_HDR;
 
 static struct udp_pcb *resolv_pcb = NULL; /**< UDP connection to DNS server */
-static struct ip4_addr serverIP; /**<the adress of the DNS server to use */
 static u8_t initFlag; /**< set to 1 if initialized*/
 static u8_t respFlag = 0; /**< set to 1 if responce received*/
 static u8_t payload_len = 0; /**< length of the received payload buffer*/
 static unsigned char * user_buffer_ptr;
 
-
-/** print_buf prints out a buffer. This makes it easier to troubleshoot
-  * buffers sent or ceived from the DNS server */
-void print_buf(unsigned char *buf, int length) {
+/** print_buf function prints out a buffer to terminal. This makes it easier to troubleshoot
+  * buffers sent to or received from the DNS server */
+void
+print_buf(unsigned char *buf, int length){
   unsigned char * buf_char_ptr;
   static const char *TAG = "print_buf   ";
   buf_char_ptr = buf;
@@ -170,61 +126,29 @@ void print_buf(unsigned char *buf, int length) {
       ESP_LOGI(TAG, "....%d Hex in received buffer   : %X", i+1, *buf_char_ptr);
     }
     buf_char_ptr++;
-  } // check printer buffer end *
-}
-
-/** @brief * get_qname_len() - Walk through the encoded answer buffer and return
- * the length of the encoded name in chars. length of zero indicates a Problem
- * condition
- *---------------------------------------------------------------------------*/
-int
-get_qname_len(unsigned char *name_ptr){
-
-  int qname_len =0;
-
-  while(qname_len < MAX_NAME_LENGTH){
-    if (*name_ptr == 0){
-      qname_len++;
-      break;
-    }
-    else if (*name_ptr == 0xC0){
-      qname_len += 2;
-      break;
-    }
-    else{
-      qname_len += (*name_ptr + 1);
-      name_ptr += (*name_ptr + 1);
-    }
-  } //end while loop
-
-  if (qname_len == MAX_NAME_LENGTH){
-    qname_len = 0;
   }
-  return qname_len;
 }
 
-/**Querry a DNS server and return a buffer with the answer(s)
- * The res_query_jps() function provides an interface to the server query mechanism.
+/** @brief res_query querries a DNS server and return a buffer with the answer(s)
+ * The res_query() function provides an interface to the server query mechanism.
  * It constructs a query, sends it to the DNS server, awaits a response, and
- * makes preliminary checks on the reply. The query requests information of the
- * specified type and class for the specified fully-qualified domain name dname.
- * The reply message is left in the answer buffer
+ * makes preliminary checks on the reply. The reply message is left in the answer buffer
  */
 int
-res_query_jps(const char *dname, int class, int type, unsigned char *answer, int anslen){
-  static const char *TAG = "res_query_jps";
+res_query(const char *dname, int class, int type, unsigned char *answer, int anslen){
+  static const char *TAG = "res_query";
   ESP_LOGI(TAG, "");
-  ESP_LOGI(TAG, ".Begin res_query_jps function");
+  ESP_LOGI(TAG, ".Begin res_query function");
 
   static u8_t n;
-  DNS_HDR *hdr;
+  RFC1035_HDR *hdr;
   struct pbuf *p;
   char *query, *nptr;
   const char *pHostname;
 
-  p = pbuf_alloc(PBUF_TRANSPORT, sizeof(DNS_HDR)+MAX_NAME_LENGTH+5, PBUF_RAM);
-  hdr = (DNS_HDR *)p->payload;
-  memset(hdr, 0, sizeof(DNS_HDR));
+  p = pbuf_alloc(PBUF_TRANSPORT, sizeof(RFC1035_HDR)+MAX_NAME_LENGTH+5, PBUF_RAM);
+  hdr = (RFC1035_HDR *)p->payload;
+  memset(hdr, 0, sizeof(RFC1035_HDR));
 
   // make start of answer header globally available
   user_buffer_ptr = answer;
@@ -232,8 +156,8 @@ res_query_jps(const char *dname, int class, int type, unsigned char *answer, int
   /* Fill in header information observing Big Endian / Little Endian considerations*/
   hdr->id = htons(99);
   hdr->flags1 = DNS_FLAG1_RD; //This is 8bits so no need to worry about htons
-  hdr->numquestions = htons(1);
-  query = (char *)hdr + sizeof(DNS_HDR);
+  hdr->qdcount = htons(1); // number of questions
+  query = (char *)hdr + sizeof(RFC1035_HDR);
 
   /* Convert hostname into suitable query format. */
   pHostname = dname;
@@ -258,13 +182,15 @@ res_query_jps(const char *dname, int class, int type, unsigned char *answer, int
 
   // complete the question by (1) terminating the QNAME with 0, (2) specifying
   // QTYPE and (3) specifying QCLASS
-  static unsigned char endquery[] = {0,0,1,0,1};
-  endquery[2] = (unsigned char) type;
-  endquery[4] = (unsigned char) class;
-
+  static unsigned char endquery[5];
+  endquery[0] = 0;                      // terminate the query name
+  endquery[1] = 0;                      // MSB request type
+  endquery[2] = (unsigned char) type;   // LSB request type
+  endquery[3] = 0;                      // MSB request class
+  endquery[4] = (unsigned char) class;  // LSB request class
   memcpy(query, endquery, 5);
 
-  pbuf_realloc(p, sizeof(DNS_HDR) + qname_len + 5);
+  pbuf_realloc(p, sizeof(RFC1035_HDR) + qname_len + 5);
   respFlag = 0; //clear responce flag. It will be set to 1 when buffer received
 
   udp_send(resolv_pcb, p);
@@ -281,8 +207,6 @@ res_query_jps(const char *dname, int class, int type, unsigned char *answer, int
     return 0;
   }
 
-  ESP_LOGI(TAG, "...payload length from parse = %d", payload_len);
-
   return payload_len;
 }
 
@@ -297,22 +221,9 @@ resolv_recv(void *s, struct udp_pcb *pcb, struct pbuf *p,
 {
   const char* TAG = "resolv_recv ";
   ESP_LOGI(TAG, "...resolv_recv function called");
-
-  char *pHostname;
-  //const char *aHostname; /*pointer for parsing returned buffer*/
-  DNS_ANSWER *ans;
-  DNS_HDR *hdr;
-
-  //static u8_t nquestions,
-  static u8_t nanswers;
-  //static u8_t i;
-  //unsigned char * buf_char_ptr;
   respFlag = 1;
 
   ESP_LOGI(TAG, "....Buffer length from tot_len is %d", p->len);
-
-  hdr = (DNS_HDR *)p->payload;
-
   payload_len = p->len;
 
   memcpy(user_buffer_ptr, p->payload, payload_len);
@@ -323,27 +234,23 @@ resolv_recv(void *s, struct udp_pcb *pcb, struct pbuf *p,
 err_t
 resolv_init(ip_addr_t *dnsserver_ip_addr_ptr) {
   static const char *TAG = "resolv init ";
-  ESP_LOGI(TAG, "...dnsserver is                : " IPSTR, IP2STR(&dnsserver_ip_addr_ptr->u_addr.ip4));
-  //static u8_t i;
-
-  serverIP.addr = dnsserver_ip_addr_ptr->u_addr.ip4.addr;
+  err_t ret;
 
   if(resolv_pcb != NULL){
     ESP_LOGI(TAG, "...resolv_pcb exists...delete it");
     udp_remove(resolv_pcb);
   }
-    /* TODO: check for valid IP address for DNS server? */
+
   resolv_pcb = udp_new();
   udp_bind(resolv_pcb, IP_ADDR_ANY, 0);
 
-  err_t ret;
   ret = udp_connect(resolv_pcb, dnsserver_ip_addr_ptr, DNS_SERVER_PORT);
   if (ret < 0 ){
-
-    ESP_LOGI(TAG, "...udp connect failed to       : " IPSTR, IP2STR(&dnsserver_ip_addr_ptr->u_addr.ip4));
+    ESP_LOGI(TAG, "...udp connect failed to: " IPSTR, IP2STR(&dnsserver_ip_addr_ptr->u_addr.ip4));
+    return ERR_CONN;
   }
   else{
-    ESP_LOGI(TAG, "...udp connected to            : " IPSTR, IP2STR(&dnsserver_ip_addr_ptr->u_addr.ip4));
+    ESP_LOGI(TAG, "...udp connected to: " IPSTR, IP2STR(&dnsserver_ip_addr_ptr->u_addr.ip4));
   }
 
   typedef void(* udp_recv_fn) (void *arg, struct udp_pcb *pcb, struct pbuf *p, const ip_addr_t *addr, u16_t port);
@@ -351,5 +258,13 @@ resolv_init(ip_addr_t *dnsserver_ip_addr_ptr) {
   udp_recv (resolv_pcb, udp_r, NULL);
 
   initFlag = 1;
+  return ERR_OK;
+}
+
+err_t
+resolv_close(void) {
+  udp_remove(resolv_pcb);
+  resolv_pcb = NULL;
+  initFlag = 0;
   return ERR_OK;
 }

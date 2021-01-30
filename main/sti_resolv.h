@@ -46,12 +46,17 @@
 err_t
 resolv_init(ip_addr_t *dnsserver_ip_addr_ptr); /* working to pass ip_addr_t*/
 
+/** @brief close the UDP connection and free the memory
+  */
+err_t
+resolv_close(void);
+
 /** @brief a full function resolv query
   * this function allows small computers to get a return
   * buffer from the dns server
   */
 int
-res_query_jps(const char *dname, int class, int type, unsigned char *answer, int anslen);
+res_query(const char *dname, int class, int type, unsigned char *answer, int anslen);
 
 /** @brief get_qname_len() - Walk through the encoded answer buffer and return
  * the length of the encoded name in chars.

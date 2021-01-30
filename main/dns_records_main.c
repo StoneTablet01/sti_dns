@@ -44,7 +44,6 @@
 #define EXAMPLE_FULL_HOSTNAME "XMPP.DISMAIL.DE"
 #endif
 
-//#define MESSAGE_HEADER_LEN 12
 #define MESSAGE_T_A 1 /* Message Type request is for type A DNS record*/
 #define MESSAGE_T_SRV 33 /* Message Type Request is for SRV records*/
 #define MESSAGE_C_IN 1 /* Message class is Internet */
@@ -217,7 +216,6 @@ void wifi_init_sta(void)
     if (ret < 0 ){
       ESP_LOGI(TAG, "... Error initializing resolver " );
     }
-    ESP_LOGI(TAG, "...Returned from resolver init");
 
     struct hostent *hp;
     struct ip4_addr *ip4_addr;
@@ -234,36 +232,30 @@ void wifi_init_sta(void)
 
     /* Message class is Internet */
     /* Message Type request is for type A DNS record*/
-    res = res_query_jps(full_hostname, MESSAGE_C_IN, MESSAGE_T_A, an, anslen);
+    res = res_query(full_hostname, MESSAGE_C_IN, MESSAGE_T_A, an, anslen);
     ESP_LOGI(TAG, "...length of returned buffer is %d", res);
     print_buf(an,res);
-    ESP_LOGI(TAG, "...End res_query_jps for type A records");
+    ESP_LOGI(TAG, "...End res_query for type A records");
     vTaskDelay(1000 / portTICK_PERIOD_MS);
 
     // Now try for an SRV record
 
     ESP_LOGI(TAG, "");
-    ESP_LOGI(TAG, "...Start of res_query_jps for SRV records");
+    ESP_LOGI(TAG, "...Start of res_query for SRV records");
 
-    memset(an,0,100); // re-initialize an to zero
+    memset(an,0,100); // reset an to zero
     /* Message class is Internet */
     /* Message Type Request is for SRV records*/
-    res = res_query_jps(full_hostname_1, MESSAGE_C_IN, MESSAGE_T_SRV, an, anslen);
+    res = res_query(full_hostname_1, MESSAGE_C_IN, MESSAGE_T_SRV, an, anslen);
 
-    ESP_LOGI(TAG, "...length of res_query_jps returned buffer %d", res);
+    ESP_LOGI(TAG, "...length of res_query returned buffer %d", res);
     print_buf(an,res);
-    ESP_LOGI(TAG, "...End res_query_jps for SRV records");
+    ESP_LOGI(TAG, "...End res_query for SRV records");
 
-    //sti_cb is a callback function intended to be called when an ip address
-    // is found. it can be called directly from
-    // sti_cb(full_hostname, &my_server);
-
-    //user_cb_fn sti_cb_ptr = &sti_cb;
-
-    // resolv query creates an entry in a DNS table with the name and callback
-    // when the information is found. Resolv_query only enters the information in
-    // the table. he table is updated by check entries.
-
+    ret = resolv_close(); //close the UDP port and free memory
+    if (ret < 0 ){
+      ESP_LOGI(TAG, "... Error closing resolver UDP connection" );
+    }
 
     ESP_LOGI(TAG, "\n");
     ESP_LOGI(TAG, ".Begin gethostbyname");
