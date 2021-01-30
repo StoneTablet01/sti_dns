@@ -151,18 +151,7 @@ typedef struct s_dns_answer {
   char ipchars[4]; /**< IPaddr organized as four addresses (ie. 192.168.1.1) in BE format */
 } DNS_ANSWER;
 
-/** @brief DNS answer RR structure for "SRV" type record requests.
-  *
-  */
-typedef struct resolver_srv_rr_struc {
-    uint16_t priority;
-    uint16_t weight;
-    uint16_t port;
-    char target[MAX_DOMAIN_LEN];
-    struct resolver_srv_rr_struc *next;
-} resolver_srv_rr_t;
 
-static u8_t seqno = 0;
 static struct udp_pcb *resolv_pcb = NULL; /**< UDP connection to DNS server */
 static struct ip4_addr serverIP; /**<the adress of the DNS server to use */
 static u8_t initFlag; /**< set to 1 if initialized*/
@@ -226,7 +215,6 @@ get_qname_len(unsigned char *name_ptr){
  * specified type and class for the specified fully-qualified domain name dname.
  * The reply message is left in the answer buffer
  */
-
 int
 res_query_jps(const char *dname, int class, int type, unsigned char *answer, int anslen){
   static const char *TAG = "res_query_jps";
@@ -322,71 +310,61 @@ resolv_recv(void *s, struct udp_pcb *pcb, struct pbuf *p,
 
   //static u8_t nquestions,
   static u8_t nanswers;
-  static u8_t i;
+  //static u8_t i;
   //unsigned char * buf_char_ptr;
   respFlag = 1;
 
   ESP_LOGI(TAG, "....Buffer length from tot_len is %d", p->len);
 
   hdr = (DNS_HDR *)p->payload;
-  /*
-  ESP_LOGI(TAG, "...ID %d", htons(hdr->id));
-  ESP_LOGI(TAG, "...Query %d", hdr->flags1 & DNS_FLAG1_RESPONSE);
-  ESP_LOGI(TAG, "...Error %d", hdr->flags2 & DNS_FLAG2_ERR_MASK);
-  ESP_LOGI(TAG, "...Num questions %d, answers %d, authrr %d, extrarr %d",
-    htons(hdr->numquestions),
-    htons(hdr->numanswers),
-    htons(hdr->numauthrr),
-    htons(hdr->numextrarr)); */
+
 
   // next section if only asking for id 99 - no need to do anything with tables
 
-  if(htons(hdr->id) == 99){
-    payload_len = 12; /*header length*/
-    payload_len += get_qname_len((unsigned char *)p->payload + 12); /*qname len*/
-    payload_len += 4; /* Query Type and Query Class*/
-    pHostname = p->payload + payload_len; //pHostname now points to the start of the RR
-    nanswers = htons(hdr->numanswers);
+  payload_len = 12; /*header length*/
+  payload_len += get_qname_len((unsigned char *)p->payload + 12); /*qname len*/
+  payload_len += 4; /* Query Type and Query Class*/
+  pHostname = p->payload + payload_len; //pHostname now points to the start of the RR
+  nanswers = htons(hdr->numanswers);
 
-    while(nanswers > 0){
-      /* The first byte in the answer resource record determines if it
-         is a compressed record or a normal one. */
+  while(nanswers > 0){
+    /* The first byte in the answer resource record determines if it
+       is a compressed record or a normal one. */
 
-      int rr_name_len =0; //resource record name length
-      rr_name_len = get_qname_len( (unsigned char *) pHostname);
-      //ESP_LOGI(TAG, "....rr_name_len = %d", rr_name_len);
-      payload_len += rr_name_len;
-      pHostname += rr_name_len; //phostname now points to first byte Post Hostname in RR
+    int rr_name_len =0; //resource record name length
+    rr_name_len = get_qname_len( (unsigned char *) pHostname);
+    //ESP_LOGI(TAG, "....rr_name_len = %d", rr_name_len);
+    payload_len += rr_name_len;
+    pHostname += rr_name_len; //phostname now points to first byte Post Hostname in RR
 
-      ans = (DNS_ANSWER *)pHostname;
-      /* printf("Answer: type %x, class %x, ttl %x, length %x\n",
-         htons(ans->type), htons(ans->class), (htons(ans->ttl[0])
-           << 16) | htons(ans->ttl[1]), htons(ans->len)); */
+    ans = (DNS_ANSWER *)pHostname;
+    /* printf("Answer: type %x, class %x, ttl %x, length %x\n",
+       htons(ans->type), htons(ans->class), (htons(ans->ttl[0])
+         << 16) | htons(ans->ttl[1]), htons(ans->len)); */
 
-      /* dtermine if the anser is for an A type query or and SRV query */
-      if((htons(ans->type) == 1) && (htons(ans->class) == 1) && (htons(ans->len) == 4) ){
-        payload_len += sizeof(DNS_ANSWER);
-        //ESP_LOGI(TAG, "....Header + Question + Name + DNS_Answer  length %d", payload_len);
-      }
-      else{
-        if((htons(ans->type) == 33) && (htons(ans->class) == 1) ){
-          payload_len += (sizeof(DNS_ANSWER) - 4 + htons(ans->len));
-          //ESP_LOGI(TAG, "....Header + Question + Compressed Name length %d", payload_len);
-        }
-      }
-      --nanswers;
+    /* dtermine if the anser is for an A type query or and SRV query */
+    if((htons(ans->type) == 1) && (htons(ans->class) == 1) && (htons(ans->len) == 4) ){
+      payload_len += sizeof(DNS_ANSWER);
+      //ESP_LOGI(TAG, "....Header + Question + Name + DNS_Answer  length %d", payload_len);
     }
-    memcpy(user_buffer_ptr, p->payload, payload_len);
-    free(p);
-    return;
+    else{
+      if((htons(ans->type) == 33) && (htons(ans->class) == 1) ){
+        payload_len += (sizeof(DNS_ANSWER) - 4 + htons(ans->len));
+        //ESP_LOGI(TAG, "....Header + Question + Compressed Name length %d", payload_len);
+      }
+    }
+    --nanswers;
   }
+  memcpy(user_buffer_ptr, p->payload, payload_len);
+  free(p);
+  return;
 }
 
 err_t
 resolv_init(ip_addr_t *dnsserver_ip_addr_ptr) {
   static const char *TAG = "resolv init ";
   ESP_LOGI(TAG, "...dnsserver is                : " IPSTR, IP2STR(&dnsserver_ip_addr_ptr->u_addr.ip4));
-  static u8_t i;
+  //static u8_t i;
 
   serverIP.addr = dnsserver_ip_addr_ptr->u_addr.ip4.addr;
 
