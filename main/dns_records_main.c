@@ -236,7 +236,7 @@ void wifi_init_sta(void)
     /* Message Type request is for type A DNS record*/
     res = res_query_jps(full_hostname, MESSAGE_C_IN, MESSAGE_T_A, an, anslen);
     ESP_LOGI(TAG, "...length of returned buffer is %d", res);
-    //print_buf(an,res);
+    print_buf(an,res);
     ESP_LOGI(TAG, "...End res_query_jps for type A records");
     vTaskDelay(1000 / portTICK_PERIOD_MS);
 
@@ -251,7 +251,7 @@ void wifi_init_sta(void)
     res = res_query_jps(full_hostname_1, MESSAGE_C_IN, MESSAGE_T_SRV, an, anslen);
 
     ESP_LOGI(TAG, "...length of res_query_jps returned buffer %d", res);
-    //print_buf(an,res);
+    print_buf(an,res);
     ESP_LOGI(TAG, "...End res_query_jps for SRV records");
 
     //sti_cb is a callback function intended to be called when an ip address

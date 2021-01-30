@@ -313,40 +313,8 @@ resolv_recv(void *s, struct udp_pcb *pcb, struct pbuf *p,
 
   hdr = (DNS_HDR *)p->payload;
 
-  payload_len = 12; /*header length*/
-  payload_len += get_qname_len((unsigned char *)p->payload + 12); /*qname len*/
-  payload_len += 4; /* Query Type and Query Class*/
-  pHostname = p->payload + payload_len; //pHostname now points to the start of the RR
-  nanswers = htons(hdr->numanswers);
+  payload_len = p->len;
 
-  while(nanswers > 0){
-    /* The first byte in the answer resource record determines if it
-       is a compressed record or a normal one. */
-
-    int rr_name_len =0; //resource record name length
-    rr_name_len = get_qname_len( (unsigned char *) pHostname);
-    //ESP_LOGI(TAG, "....rr_name_len = %d", rr_name_len);
-    payload_len += rr_name_len;
-    pHostname += rr_name_len; //phostname now points to first byte Post Hostname in RR
-
-    ans = (DNS_ANSWER *)pHostname;
-    /* printf("Answer: type %x, class %x, ttl %x, length %x\n",
-       htons(ans->type), htons(ans->class), (htons(ans->ttl[0])
-         << 16) | htons(ans->ttl[1]), htons(ans->len)); */
-
-    /* dtermine if the anser is for an A type query or and SRV query */
-    if((htons(ans->type) == 1) && (htons(ans->class) == 1) && (htons(ans->len) == 4) ){
-      payload_len += sizeof(DNS_ANSWER);
-      //ESP_LOGI(TAG, "....Header + Question + Name + DNS_Answer  length %d", payload_len);
-    }
-    else{
-      if((htons(ans->type) == 33) && (htons(ans->class) == 1) ){
-        payload_len += (sizeof(DNS_ANSWER) - 4 + htons(ans->len));
-        //ESP_LOGI(TAG, "....Header + Question + Compressed Name length %d", payload_len);
-      }
-    }
-    --nanswers;
-  }
   memcpy(user_buffer_ptr, p->payload, payload_len);
   free(p);
   return;
