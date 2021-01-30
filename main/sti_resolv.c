@@ -86,11 +86,6 @@
 /* The maximum number of retries when asking for a name. */
 #define MAX_RETRIES 8
 
-/* The maximum number of table entries to maintain locally */
-#ifndef LWIP_RESOLV_ENTRIES
-#define LWIP_RESOLV_ENTRIES 4
-#endif
-
 #ifndef DNS_SERVER_PORT
 #define DNS_SERVER_PORT 53
 #endif
@@ -317,9 +312,6 @@ resolv_recv(void *s, struct udp_pcb *pcb, struct pbuf *p,
   ESP_LOGI(TAG, "....Buffer length from tot_len is %d", p->len);
 
   hdr = (DNS_HDR *)p->payload;
-
-
-  // next section if only asking for id 99 - no need to do anything with tables
 
   payload_len = 12; /*header length*/
   payload_len += get_qname_len((unsigned char *)p->payload + 12); /*qname len*/
