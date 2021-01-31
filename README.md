@@ -23,7 +23,7 @@ resolv_2_A        -- This project builds on resolv_01. It removes the extra code
                       Dunkels for A records only.
 
 resolv_3_A+SRV     -- This projects adds the critical ability to get SRV records and introduces a
-                      function res_query_jps, which creates a query buffer, sends it to the DNS
+                      function res_query, which creates a query buffer, sends it to the DNS
                       server, waits for a reply, copies the buffer into a user supplied buffer, and
                       returns the length of the buffer. This project retains the working Adam
                       Dunkels style code (A records only). This project proves all the features
@@ -77,16 +77,16 @@ I (2173) resolv init : ...udp connected to            : 8.8.8.8
 I (2183) wifi station: ...Returned from resolver init
 I (2183) wifi station: ...DNS server from resolv_getserver is: 8.8.8.8
 I (2193) wifi station: ...IP address from resolv_lookup not found
-I (2203) res_query_jps:
-I (2203) res_query_jps: .Begin res_query_jps function
-I (2213) res_query_jps: ...query sent to DNS server
+I (2203) res_query:
+I (2203) res_query: .Begin res_query function
+I (2213) res_query: ...query sent to DNS server
 I (2533) resolv_recv : ...resolv_recv function called
 I (2533) resolv_recv : ....Buffer length from tot_len is 49
 I (2533) resolv_recv : ...ID 99
 I (2543) resolv_recv : ...Query 128
 I (2543) resolv_recv : ...Error 0
 I (2553) resolv_recv : ...Num questions 1, answers 1, authrr 0, extrarr 0
-I (2613) res_query_jps: ...payload length from parse = 49
+I (2613) res_query: ...payload length from parse = 49
 I (2613) wifi station: ...length of returned buffer is 49
 I (2613) print_buf   : ....1 Hex in received buffer   : 0
 I (2613) print_buf   : ....2 Letter in received buffer: c
@@ -137,20 +137,20 @@ I (2883) print_buf   : ....46 Letter in received buffer: t
 I (2893) print_buf   : ....47 Hex in received buffer   : CB
 I (2903) print_buf   : ....48 Hex in received buffer   : 3
 I (2903) print_buf   : ....49 Hex in received buffer   : FD
-I (2913) wifi station: ...End res_query_jps for type A records
+I (2913) wifi station: ...End res_query for type A records
 I (3913) wifi station:
-I (3913) wifi station: ...Start of res_query_jps for SRV records
-I (3913) res_query_jps:
-I (3913) res_query_jps: .Begin res_query_jps function
-I (3923) res_query_jps: ...query sent to DNS server
+I (3913) wifi station: ...Start of res_query for SRV records
+I (3913) res_query:
+I (3913) res_query: .Begin res_query function
+I (3923) res_query: ...query sent to DNS server
 I (4173) resolv_recv : ...resolv_recv function called
 I (4173) resolv_recv : ....Buffer length from tot_len is 81
 I (4173) resolv_recv : ...ID 99
 I (4183) resolv_recv : ...Query 128
 I (4183) resolv_recv : ...Error 0
 I (4183) resolv_recv : ...Num questions 1, answers 1, authrr 0, extrarr 0
-I (4323) res_query_jps: ...payload length from parse = 81
-I (4323) wifi station: ...length of res_query_jps returned buffer 81
+I (4323) res_query: ...payload length from parse = 81
+I (4323) wifi station: ...length of res_query returned buffer 81
 I (4323) print_buf   : ....1 Hex in received buffer   : 0
 I (4323) print_buf   : ....2 Letter in received buffer: c
 I (4333) print_buf   : ....3 Hex in received buffer   : 81
@@ -232,7 +232,7 @@ I (4793) print_buf   : ....78 Hex in received buffer   : 2
 I (4803) print_buf   : ....79 Letter in received buffer: d
 I (4803) print_buf   : ....80 Letter in received buffer: e
 I (4813) print_buf   : ....81 Hex in received buffer   : 0
-I (4823) wifi station: ...End res_query_jps for SRV records
+I (4823) wifi station: ...End res_query for SRV records
 I (4823) wifi station:
 
 I (4833) wifi station: .Begin Resolv Query

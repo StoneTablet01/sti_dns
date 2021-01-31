@@ -44,10 +44,10 @@
 #define EXAMPLE_FULL_HOSTNAME "XMPP.DISMAIL.DE"
 #endif
 
-//#define MESSAGE_HEADER_LEN 12
 #define MESSAGE_T_A 1 /* Message Type request is for type A DNS record*/
 #define MESSAGE_T_SRV 33 /* Message Type Request is for SRV records*/
 #define MESSAGE_C_IN 1 /* Message class is Internet */
+#define UDP_BUFFER_SIZE 100
 
 /* FreeRTOS event group to signal when we are connected*/
 static EventGroupHandle_t s_wifi_event_group;
@@ -178,8 +178,6 @@ void wifi_init_sta(void)
     // get ip information
     ESP_ERROR_CHECK(esp_netif_get_ip_info(esp_netif_handle, &ap_info));
     ESP_LOGI(TAG, "...Current IP from netif      : "IPSTR"", IP2STR(&ap_info.ip));
-    ESP_LOGI(TAG, "...Current netmask from netif : "IPSTR"", IP2STR(&ap_info.netmask));
-    ESP_LOGI(TAG, "...Current gateway from netif : "IPSTR"", IP2STR(&ap_info.gw));
 
     //get hostname information
     const char *hostname = NULL;
@@ -189,27 +187,16 @@ void wifi_init_sta(void)
     //get information on the DNS connections
 
     esp_netif_dns_type_t ask_for_primary = ESP_NETIF_DNS_MAIN;
-    esp_netif_dns_type_t ask_for_secondary = ESP_NETIF_DNS_BACKUP;
-    esp_netif_dns_type_t ask_for_fallback = ESP_NETIF_DNS_FALLBACK;
-    esp_netif_dns_type_t ask_for_dns_max = ESP_NETIF_DNS_MAX;
     esp_netif_dns_info_t dns_info;
 
     //Get all connections, but save the primary as an ip4_addr
-    struct ip4_addr my_server, my_ip;
+    struct ip4_addr my_server;
 
     esp_netif_get_dns_info(esp_netif_handle, ask_for_primary, &dns_info);
     ESP_LOGI(TAG, "...Name Server Primary (netif): " IPSTR, IP2STR(&dns_info.ip.u_addr.ip4));
 
     my_server.addr = dns_info.ip.u_addr.ip4.addr;
 
-    esp_netif_get_dns_info(esp_netif_handle, ask_for_secondary, &dns_info);
-    ESP_LOGI(TAG, "...Name Server Sec (netif)    : " IPSTR, IP2STR(&dns_info.ip.u_addr.ip4));
-
-    esp_netif_get_dns_info(esp_netif_handle, ask_for_fallback, &dns_info);
-    ESP_LOGI(TAG, "...Name Serv Fallback (netif) : " IPSTR, IP2STR(&dns_info.ip.u_addr.ip4));
-
-    esp_netif_get_dns_info(esp_netif_handle, ask_for_dns_max, &dns_info);
-    ESP_LOGI(TAG, "...Name Server DNS Max        : " IPSTR, IP2STR(&dns_info.ip.u_addr.ip4));
 
     err_t ret;
     ip_addr_t *dnsserver_ip_addr_ptr, dnsserver_ip_addr;
@@ -223,30 +210,12 @@ void wifi_init_sta(void)
     IP4_ADDR(&temp,8,8,8,8); // 71.10.216.2
     better_dns.u_addr.ip4.addr = temp.addr;
 
-    /*
-    //examples of using the unified ip_addr_t in printing.
-    //first print a ip4_addr, then print the ip_addr_t with . then
-    //print using pointer. Note IP2STR expects the address of an ip4_addr struct
-    ESP_LOGI(TAG, "Name Server dnsserver_ip_addr: " IPSTR, IP2STR(&my_server));
-    ESP_LOGI(TAG, "Name Server dnsserver_ip_addr: " IPSTR, IP2STR(&dnsserver_ip_addr.u_addr.ip4));
-    ESP_LOGI(TAG, "Name Server dnsserver_ip_addr: " IPSTR, IP2STR(&dnsserver_ip_addr_ptr->u_addr.ip4));
-    */
     ESP_LOGI(TAG, "\n");
     ESP_LOGI(TAG, ".Initialize the Resolver");
     //ret = resolv_init(dnsserver_ip_addr_ptr);
     ret = resolv_init(&better_dns);
     if (ret < 0 ){
       ESP_LOGI(TAG, "... Error initializing resolver " );
-    }
-    ESP_LOGI(TAG, "...Returned from resolver init");
-
-    //The user can check if the DNS server was configured.
-    if (resolv_getserver() != 0){
-      my_ip.addr = resolv_getserver();
-      ESP_LOGI(TAG, "...DNS server from resolv_getserver is: " IPSTR, IP2STR(&my_ip));
-    }
-    else{
-      ESP_LOGI(TAG, "...DNS server from resolv_getserver not found");
     }
 
     struct hostent *hp;
@@ -256,75 +225,33 @@ void wifi_init_sta(void)
     char full_hostname_1[] = "_xmpp-client._tcp.dismail.de";
 
 
-    // The user can check if the name is in the table with resolv_lookup
-    // expect dnslookup to be not found as resolv query has not yet been called
-    my_ip.addr = resolv_lookup(full_hostname);
-    if (resolv_lookup(full_hostname) != 0){
-      ESP_LOGI(TAG, "...IP address from resolv_lookup is: " IPSTR, IP2STR(&my_ip));
-    }
-    else{
-      ESP_LOGI(TAG, "...IP address from resolv_lookup not found");
-    }
-
     /* create test call to resolv_query_jps */
-    unsigned char an[100];
-    memset(an,0,100);
-    int anslen = 0;
+    unsigned char an[UDP_BUFFER_SIZE];
+    memset(an,0,UDP_BUFFER_SIZE);
+    int anslen = UDP_BUFFER_SIZE;
     int res;
 
-    /* Message class is Internet */
-    /* Message Type request is for type A DNS record*/
-    res = res_query_jps(full_hostname, MESSAGE_C_IN, MESSAGE_T_A, an, anslen);
+    res = res_query(full_hostname, MESSAGE_C_IN, MESSAGE_T_A, an, anslen);
     ESP_LOGI(TAG, "...length of returned buffer is %d", res);
     print_buf(an,res);
-    ESP_LOGI(TAG, "...End res_query_jps for type A records");
+    ESP_LOGI(TAG, "...End res_query for type A records");
     vTaskDelay(1000 / portTICK_PERIOD_MS);
 
     // Now try for an SRV record
 
     ESP_LOGI(TAG, "");
-    ESP_LOGI(TAG, "...Start of res_query_jps for SRV records");
+    ESP_LOGI(TAG, "...Start of res_query for SRV records");
 
-    memset(an,0,100); // re-initialize an to zero
-    /* Message class is Internet */
-    /* Message Type Request is for SRV records*/
-    res = res_query_jps(full_hostname_1, MESSAGE_C_IN, MESSAGE_T_SRV, an, anslen);
+    memset(an,0,100); // reset an to zero
+    res = res_query(full_hostname_1, MESSAGE_C_IN, MESSAGE_T_SRV, an, anslen);
 
-    ESP_LOGI(TAG, "...length of res_query_jps returned buffer %d", res);
+    ESP_LOGI(TAG, "...length of res_query returned buffer %d", res);
     print_buf(an,res);
-    ESP_LOGI(TAG, "...End res_query_jps for SRV records");
+    ESP_LOGI(TAG, "...End res_query for SRV records");
 
-    //sti_cb is a callback function intended to be called when an ip address
-    // is found. it can be called directly from
-    // sti_cb(full_hostname, &my_server);
-
-    user_cb_fn sti_cb_ptr = &sti_cb;
-
-    // resolv query creates an entry in a DNS table with the name and callback
-    // when the information is found. Resolv_query only enters the information in
-    // the table. he table is updated by check entries.
-    ESP_LOGI(TAG, "\n");
-    ESP_LOGI(TAG, ".Begin Resolv Query");
-    resolv_query(full_hostname, sti_cb_ptr);
-
-    ESP_LOGI(TAG, "\n");
-    ESP_LOGI(TAG, ".Begin Check Entries");
-    // check if dns table needs update
-    check_entries();
-
-    ESP_LOGI(TAG, ".Begin Wait");
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
-
-    ESP_LOGI(TAG, "\n");
-    ESP_LOGI(TAG, ".END Wait");
-    ESP_LOGI(TAG, "...Check for ip address from table");
-
-    my_ip.addr = resolv_lookup(full_hostname);
-    if (resolv_lookup(full_hostname) != 0){
-      ESP_LOGI(TAG, "...IP address from resolv_lookup is: " IPSTR, IP2STR(&my_ip));
-    }
-    else{
-      ESP_LOGI(TAG, "...IP address from resolv_lookup not found");
+    ret = resolv_close(); //close the UDP port and free memory
+    if (ret < 0 ){
+      ESP_LOGI(TAG, "... Error closing resolver UDP connection" );
     }
 
     ESP_LOGI(TAG, "\n");
@@ -335,14 +262,6 @@ void wifi_init_sta(void)
 
     ESP_LOGI(TAG, "...Gathering DNS records for %s ", full_hostname);
     ESP_LOGI(TAG, "...Address No. 0 from DNS: " IPSTR, IP2STR(ip4_addr));
-
-    if (hp->h_addr_list[1] != NULL){
-      ip4_addr = (struct ip4_addr *)hp->h_addr_list[1];
-      ESP_LOGI(TAG, "...Address No. 1 DNS: " IPSTR, IP2STR(ip4_addr));
-    }
-    else{
-      ESP_LOGI(TAG, "...Address No. 1 from DNS was null");
-    }
 
     ESP_LOGI(TAG, "Done with connection... Now shutdown handlers");
 
