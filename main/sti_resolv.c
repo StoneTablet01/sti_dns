@@ -129,6 +129,39 @@ print_buf(unsigned char *buf, int length){
   }
 }
 
+int
+format_hostname(unsigned char * dname, unsigned char * qname){
+  int encoded_len;
+  int subname_len = 0;
+  unsigned char * num_ptr;
+
+  num_ptr = qname;
+  qname ++;
+  for (int n = 1; n < (MAX_NAME_LENGTH + 1); n++){
+    encoded_len = n; //number of char in buffer
+    if( *dname == 0 ){
+      *num_ptr = subname_len;
+      break;
+    }
+    else if(*dname == '.'){
+      *num_ptr = subname_len;
+      num_ptr = qname;
+      dname++;
+      qname++;
+      subname_len = 0;
+    }
+    else{
+        *qname = *dname;
+        subname_len ++;
+        dname++;
+        qname++;
+    }
+  }
+  if(encoded_len >= MAX_NAME_LENGTH) encoded_len = 0;
+
+  return encoded_len;
+}
+
 /** @brief res_query querries a DNS server and return a buffer with the answer(s)
  * The res_query() function provides an interface to the server query mechanism.
  * It constructs a query, sends it to the DNS server, awaits a response, and
@@ -137,48 +170,28 @@ print_buf(unsigned char *buf, int length){
 int
 res_query(const char *dname, int class, int type, unsigned char *answer, int anslen){
   static const char *TAG = "res_query";
-  ESP_LOGI(TAG, "");
-  ESP_LOGI(TAG, ".Begin res_query function");
+  int qname_len;
 
-  static u8_t n;
   RFC1035_HDR *hdr;
   struct pbuf *p;
-  char *query, *nptr;
-  const char *pHostname;
+  unsigned char *query;
+
+  ESP_LOGI(TAG, ".Begin res_query function");
 
   p = pbuf_alloc(PBUF_TRANSPORT, sizeof(RFC1035_HDR)+MAX_NAME_LENGTH+5, PBUF_RAM);
   hdr = (RFC1035_HDR *)p->payload;
   memset(hdr, 0, sizeof(RFC1035_HDR));
 
-  // make start of answer header globally available
-  user_buffer_ptr = answer;
+  user_buffer_ptr = answer;   // make start of answer header globally available
 
   /* Fill in header information observing Big Endian / Little Endian considerations*/
   hdr->id = htons(99);
   hdr->flags1 = DNS_FLAG1_RD; //This is 8bits so no need to worry about htons
   hdr->qdcount = htons(1); // number of questions
-  query = (char *)hdr + sizeof(RFC1035_HDR);
+  query = (unsigned char *)hdr + sizeof(RFC1035_HDR);
 
-  /* Convert hostname into suitable query format. */
-  pHostname = dname;
-  --pHostname;
-  int qname_len = 0;
-  do
-  {
-    ++pHostname;
-    nptr = query;
-    ++query;
-    for(n = 0; *pHostname != '.' && *pHostname != 0; ++pHostname)
-    {
-      *query = *pHostname;
-      ++query;
-      ++n;
-      qname_len ++;
-    }
-    *nptr = n;
-    qname_len ++;
-  }
-  while(*pHostname != 0);
+  qname_len = format_hostname((unsigned char *) dname, (unsigned char *) query);
+  query += qname_len;
 
   // complete the question by (1) terminating the QNAME with 0, (2) specifying
   // QTYPE and (3) specifying QCLASS

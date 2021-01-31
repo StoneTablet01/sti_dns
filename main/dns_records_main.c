@@ -47,6 +47,7 @@
 #define MESSAGE_T_A 1 /* Message Type request is for type A DNS record*/
 #define MESSAGE_T_SRV 33 /* Message Type Request is for SRV records*/
 #define MESSAGE_C_IN 1 /* Message class is Internet */
+#define UDP_BUFFER_SIZE 100
 
 /* FreeRTOS event group to signal when we are connected*/
 static EventGroupHandle_t s_wifi_event_group;
@@ -225,13 +226,11 @@ void wifi_init_sta(void)
 
 
     /* create test call to resolv_query_jps */
-    unsigned char an[100];
-    memset(an,0,100);
-    int anslen = 0;
+    unsigned char an[UDP_BUFFER_SIZE];
+    memset(an,0,UDP_BUFFER_SIZE);
+    int anslen = UDP_BUFFER_SIZE;
     int res;
 
-    /* Message class is Internet */
-    /* Message Type request is for type A DNS record*/
     res = res_query(full_hostname, MESSAGE_C_IN, MESSAGE_T_A, an, anslen);
     ESP_LOGI(TAG, "...length of returned buffer is %d", res);
     print_buf(an,res);
@@ -244,8 +243,6 @@ void wifi_init_sta(void)
     ESP_LOGI(TAG, "...Start of res_query for SRV records");
 
     memset(an,0,100); // reset an to zero
-    /* Message class is Internet */
-    /* Message Type Request is for SRV records*/
     res = res_query(full_hostname_1, MESSAGE_C_IN, MESSAGE_T_SRV, an, anslen);
 
     ESP_LOGI(TAG, "...length of res_query returned buffer %d", res);
