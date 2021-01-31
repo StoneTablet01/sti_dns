@@ -105,7 +105,7 @@ typedef struct s_RFC1035_HDR {
 } RFC1035_HDR;
 
 static struct udp_pcb *resolv_pcb = NULL; /**< UDP connection to DNS server */
-static u8_t initFlag; /**< set to 1 if initialized*/
+static u8_t initFlag; /**< set to 1 if UDP initialized*/
 static u8_t respFlag = 0; /**< set to 1 if responce received*/
 static u8_t payload_len = 0; /**< length of the received payload buffer*/
 static unsigned char * user_buffer_ptr;
@@ -141,6 +141,8 @@ format_hostname(unsigned char * dname, unsigned char * qname){
     encoded_len = n; //number of char in buffer
     if( *dname == 0 ){
       *num_ptr = subname_len;
+      *qname = 0;
+      encoded_len ++;
       break;
     }
     else if(*dname == '.'){
@@ -177,6 +179,10 @@ res_query(const char *dname, int class, int type, unsigned char *answer, int ans
   unsigned char *query;
 
   ESP_LOGI(TAG, ".Begin res_query function");
+  /* Check if UDP connection initialized */
+  if (initFlag != 1){
+    return 0;
+  }
 
   p = pbuf_alloc(PBUF_TRANSPORT, sizeof(RFC1035_HDR)+MAX_NAME_LENGTH+5, PBUF_RAM);
   hdr = (RFC1035_HDR *)p->payload;
@@ -195,15 +201,14 @@ res_query(const char *dname, int class, int type, unsigned char *answer, int ans
 
   // complete the question by (1) terminating the QNAME with 0, (2) specifying
   // QTYPE and (3) specifying QCLASS
-  static unsigned char endquery[5];
-  endquery[0] = 0;                      // terminate the query name
-  endquery[1] = 0;                      // MSB request type
-  endquery[2] = (unsigned char) type;   // LSB request type
-  endquery[3] = 0;                      // MSB request class
-  endquery[4] = (unsigned char) class;  // LSB request class
-  memcpy(query, endquery, 5);
+  static unsigned char endquery[4];
+  endquery[0] = 0;                      // MSB request type
+  endquery[1] = (unsigned char) type;   // LSB request type
+  endquery[2] = 0;                      // MSB request class
+  endquery[3] = (unsigned char) class;  // LSB request class
+  memcpy(query, endquery, 4);
 
-  pbuf_realloc(p, sizeof(RFC1035_HDR) + qname_len + 5);
+  pbuf_realloc(p, sizeof(RFC1035_HDR) + qname_len + 4);
   respFlag = 0; //clear responce flag. It will be set to 1 when buffer received
 
   udp_send(resolv_pcb, p);
@@ -223,11 +228,8 @@ res_query(const char *dname, int class, int type, unsigned char *answer, int ans
   return payload_len;
 }
 
-/*---------------------------------------------------------------------------*
- *
- * Callback for DNS responses
- *
- *---------------------------------------------------------------------------*/
+/** @brief Callback executed when DNS server response is received
+  */
 static void
 resolv_recv(void *s, struct udp_pcb *pcb, struct pbuf *p,
                                   const ip_addr_t *addr, u16_t port)
@@ -244,6 +246,10 @@ resolv_recv(void *s, struct udp_pcb *pcb, struct pbuf *p,
   return;
 }
 
+/** @brief Initialize a UDP connection
+  * @parameter *dnsserver_ip_addr_ptr the dns server IP as ip_addr_t
+  * @returns err_t enumertion
+  */
 err_t
 resolv_init(ip_addr_t *dnsserver_ip_addr_ptr) {
   static const char *TAG = "resolv init ";
@@ -274,6 +280,10 @@ resolv_init(ip_addr_t *dnsserver_ip_addr_ptr) {
   return ERR_OK;
 }
 
+/** @brief Close the UDP connection
+  *
+  * @returns err_t enumertion
+  */
 err_t
 resolv_close(void) {
   udp_remove(resolv_pcb);
