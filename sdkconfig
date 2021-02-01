@@ -127,6 +127,7 @@ CONFIG_ESP_WIFI_SSID="MySpectrumWiFi30-2G"
 CONFIG_ESP_WIFI_PASSWORD="quickapple991"
 CONFIG_ESP_MAXIMUM_RETRY=5
 CONFIG_FULL_HOSTNAME="xmpp.dismail.de"
+CONFIG_FULL_XMPP_SRV_HOST="_xmpp-client._tcp.dismail.de"
 # end of Example Configuration
 
 #

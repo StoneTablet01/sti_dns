@@ -22,5 +22,17 @@ menu "Example Configuration"
         string "Hostname"
         default "xmpp.dismail.de"
         help
-            Hostname to get records for.
+            Hostname to get DNS A records for.
+
+    config FULL_XMPP_SRV_HOST
+        string "XMPP SRV Hostname"
+        default "_xmpp-client._tcp.dismail.de"
+        help
+            Hostname to get DNS SRV records from.
+
+    config PRIMARY_DNS_SERVER
+        string "Primary DNS Server"
+        default "8.8.8.8"
+        help
+            Hostname to get DNS SRV records from IPV4
 endmenu

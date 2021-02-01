@@ -56,6 +56,18 @@
 #define EXAMPLE_FULL_HOSTNAME "XMPP.DISMAIL.DE"
 #endif
 
+#ifdef CONFIG_FULL_XMPP_SRV_HOST
+#define EXAMPLE_FULL_XMPP_SRV_HOST  CONFIG_FULL_XMPP_SRV_HOST
+#else
+#define EXAMPLE_FULL_XMPP_SRV_HOST "_xmpp-client._tcp.dismail.de"
+#endif
+
+#ifdef CONFIG_PRIMARY_DNS_SERVER
+#define PRIMARY_DNS_SERVER  CONFIG_PRIMARY_DNS_SERVER
+#else
+#define EXAMPLE_PRIMARY_DNS_SERVER "8.8.8.8"
+#endif
+
 #define MESSAGE_T_A 1 /* Message Type request is for type A DNS record*/
 #define MESSAGE_T_SRV 33 /* Message Type Request is for SRV records*/
 #define MESSAGE_C_IN 1 /* Message class is Internet */
@@ -196,35 +208,27 @@ void wifi_init_sta(void)
     ESP_ERROR_CHECK(esp_netif_get_hostname(esp_netif_handle, &hostname));
     ESP_LOGI(TAG, "...Current Hostname from netif: %s", hostname);
 
-    //get information on the DNS connections
-
+    //get information on the DNS connections established when WiFI was configured
     esp_netif_dns_type_t ask_for_primary = ESP_NETIF_DNS_MAIN;
     esp_netif_dns_info_t dns_info;
-
-    //Get all connections, but save the primary as an ip4_addr
-    struct ip4_addr my_server;
 
     esp_netif_get_dns_info(esp_netif_handle, ask_for_primary, &dns_info);
     ESP_LOGI(TAG, "...Name Server Primary (netif): " IPSTR, IP2STR(&dns_info.ip.u_addr.ip4));
 
-    my_server.addr = dns_info.ip.u_addr.ip4.addr;
-
     err_t ret;
-    ip_addr_t *dnsserver_ip_addr_ptr, dnsserver_ip_addr;
-    dnsserver_ip_addr_ptr = &dnsserver_ip_addr;
-    dnsserver_ip_addr_ptr->type = IPADDR_TYPE_V4;
-    dnsserver_ip_addr_ptr->u_addr.ip4.addr = my_server.addr;
+    ip_addr_t dnsserver_ip_addr;
+    dnsserver_ip_addr.type = IPADDR_TYPE_V4;
+    dnsserver_ip_addr.u_addr.ip4.addr = dns_info.ip.u_addr.ip4.addr;
 
-    struct ip4_addr temp;
-    ip_addr_t goog_dns;
-    goog_dns.type = IPADDR_TYPE_V4;
-    IP4_ADDR(&temp,8,8,8,8); // 71.10.216.2
-    goog_dns.u_addr.ip4.addr = temp.addr;
+    ip_addr_t primary_dns_server;
+    primary_dns_server.type = IPADDR_TYPE_V4;
+    primary_dns_server.u_addr.ip4.addr = inet_addr((const char *) EXAMPLE_PRIMARY_DNS_SERVER);
 
     ESP_LOGI(TAG, "\n");
     ESP_LOGI(TAG, ".Initialize the Resolver");
-    //ret = resolv_init(dnsserver_ip_addr_ptr);
-    ret = resolv_init(&goog_dns);
+
+    //ret = resolv_init(&dnsserver_ip_addr);
+    ret = resolv_init(&primary_dns_server);
     if (ret < 0 ){
       ESP_LOGI(TAG, "... Error initializing resolver " );
     }
@@ -233,7 +237,7 @@ void wifi_init_sta(void)
     struct ip4_addr *ip4_addr;
 
     char full_hostname_1[] = EXAMPLE_FULL_HOSTNAME;
-    char full_hostname_2[] = "_xmpp-client._tcp.dismail.de";
+    char full_hostname_2[] = EXAMPLE_FULL_XMPP_SRV_HOST;
 
     unsigned char an[UDP_BUFFER_SIZE];
     memset(an,0,UDP_BUFFER_SIZE);
