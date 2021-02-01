@@ -1,60 +1,34 @@
-/*
-
- * DNS host name to IP address resolver.
- * This file implements a DNS host name to IP address resolver.
-
- * Port to lwIP from uIP
- * by Jim Pettinato April 2007
-
- * uIP version Copyright (c) 2002-2003, Adam Dunkels.
- * All rights reserved.
+/** @file sti_resolv.c
+ *  @brief Functions to get DNS information
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 3. The name of the author may not be used to endorse or promote
- *    products derived from this software without specific prior
- *    written permission.
+ *  This contains the prototypes for the functions necessary to get DNS
+ *  tyoe A information and DNS Type SRV information from DNS Servers. Key references are
+ *  (1) rfc 1035 DOMAIN NAMES - IMPLEMENTATION AND SPECIFICATION
+ *  (2) rfc 2782 A DNS RR for specifying the location of services (DNS SRV)
+ *  (3) "DNS Primer" from Duke University (search for "CPS365 FALL 2016 DNS-Primer")
+ *  (4) Port to lwIP from uIP by Jim Pettinato April 2007
+ *  (5) Uip Implementation by Adam Dunkels
  *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS
- * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
- * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
- * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *  Copyright 2021 Jim Sutton <jamespsutton@cox.net>
+ *  Permission is hereby granted, free of charge, to any person obtaining a copy
+ *  of this software and associated documentation files (the "Software"), to deal
+ *  in the Software without restriction, including without limitation the rights
+ *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *  copies of the Software, and to permit persons to whom the Software is furnished
+ *  to do so, subject to the following conditions:
+ *  The above copyright notice and this permission notice shall be included in all
+ *  copies or substantial portions of the Software.
  *
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ *  SOFTWARE.
  *
- * RESOLV.C
- *
- * The lwIP DNS resolver functions are used to lookup a host name and
- * map it to a numerical IP address. It maintains a list of resolved
- * hostnames that can be queried with the resolv_lookup() function.
- * New hostnames can be resolved using the resolv_query() function.
- *
- * The lwIP version of the resolver also adds a non-blocking version of
- * gethostbyname() that will work with a raw API application. This function
- * checks for an IP address string first and converts it if it is valid.
- * gethostbyname() then does a resolv_lookup() to see if the name is
- * already in the table. If so, the IP is returned. If not, a query is
- * issued and the function returns with a QUERY_QUEUED status. The app
- * using the resolver must then go into a waiting state.
- *
- * Once a hostname has been resolved (or found to be non-existent),
- * the resolver code calls a specified callback function (which
- * must be implemented by the module that uses the resolver).
- *
- * Jim Sutton made the code work on the ESP32 chip. Big Problem
- * was how IP addresses were stored
+ *  @author Jim Sutton <jamespsutton@cox.net>
+ *  @bug No known bugs.
  */
 
 #include <string.h>
@@ -171,14 +145,13 @@ format_hostname(unsigned char * dname, unsigned char * qname){
  */
 int
 res_query(const char *dname, int class, int type, unsigned char *answer, int anslen){
-  static const char *TAG = "res_query";
   int qname_len;
+  static const char *TAG = "res_query   ";
 
   RFC1035_HDR *hdr;
   struct pbuf *p;
   unsigned char *query;
 
-  ESP_LOGI(TAG, ".Begin res_query function");
   /* Check if UDP connection initialized */
   if (initFlag != 1){
     return 0;
@@ -234,11 +207,7 @@ static void
 resolv_recv(void *s, struct udp_pcb *pcb, struct pbuf *p,
                                   const ip_addr_t *addr, u16_t port)
 {
-  const char* TAG = "resolv_recv ";
-  ESP_LOGI(TAG, "...resolv_recv function called");
   respFlag = 1;
-
-  ESP_LOGI(TAG, "....Buffer length from tot_len is %d", p->len);
   payload_len = p->len;
 
   memcpy(user_buffer_ptr, p->payload, payload_len);
@@ -282,7 +251,7 @@ resolv_init(ip_addr_t *dnsserver_ip_addr_ptr) {
 
 /** @brief Close the UDP connection
   *
-  * @returns err_t enumertion
+  * @returns err_t enumertion success is ERR_OK
   */
 err_t
 resolv_close(void) {

@@ -1,11 +1,23 @@
-/* WiFi station Example
-
-   This example code is in the Public Domain (or CC0 licensed, at your option.)
-
-   Unless required by applicable law or agreed to in writing, this
-   software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-   CONDITIONS OF ANY KIND, either express or implied.
-*/
+/** WiFi station and DNS record retieval Example
+  *
+  * This is the main program it calls DNS information retrieval Functions
+  * contained in sti_resolve.h to show how those functions can be used to retrieve
+  * DNS type "A" and "SRV" Resource Records.
+  *
+  * This software was copied from Espressif's IDF downwload. The original code
+  * contained the following licensing information:
+  *
+  * This example code is in the Public Domain (or CC0 licensed, at your option.)
+  *
+  * Unless required by applicable law or agreed to in writing, this
+  * software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+  * CONDITIONS OF ANY KIND, either express or implied.
+  *
+  * The code has been modified by Jim Sutton 2021. The modified code in this file
+  * is in the Public Domain (or CC0 licensed, at your option.) Other files in This
+  * project that are original, are licensed using the standard MIT license. Refer to
+  * the license information in each file.
+  */
 #include <string.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -197,7 +209,6 @@ void wifi_init_sta(void)
 
     my_server.addr = dns_info.ip.u_addr.ip4.addr;
 
-
     err_t ret;
     ip_addr_t *dnsserver_ip_addr_ptr, dnsserver_ip_addr;
     dnsserver_ip_addr_ptr = &dnsserver_ip_addr;
@@ -205,15 +216,15 @@ void wifi_init_sta(void)
     dnsserver_ip_addr_ptr->u_addr.ip4.addr = my_server.addr;
 
     struct ip4_addr temp;
-    ip_addr_t better_dns;
-    better_dns.type = IPADDR_TYPE_V4;
+    ip_addr_t goog_dns;
+    goog_dns.type = IPADDR_TYPE_V4;
     IP4_ADDR(&temp,8,8,8,8); // 71.10.216.2
-    better_dns.u_addr.ip4.addr = temp.addr;
+    goog_dns.u_addr.ip4.addr = temp.addr;
 
     ESP_LOGI(TAG, "\n");
     ESP_LOGI(TAG, ".Initialize the Resolver");
     //ret = resolv_init(dnsserver_ip_addr_ptr);
-    ret = resolv_init(&better_dns);
+    ret = resolv_init(&goog_dns);
     if (ret < 0 ){
       ESP_LOGI(TAG, "... Error initializing resolver " );
     }
@@ -221,30 +232,30 @@ void wifi_init_sta(void)
     struct hostent *hp;
     struct ip4_addr *ip4_addr;
 
-    char full_hostname[] = EXAMPLE_FULL_HOSTNAME;
-    char full_hostname_1[] = "_xmpp-client._tcp.dismail.de";
+    char full_hostname_1[] = EXAMPLE_FULL_HOSTNAME;
+    char full_hostname_2[] = "_xmpp-client._tcp.dismail.de";
 
-
-    /* create test call to resolv_query_jps */
     unsigned char an[UDP_BUFFER_SIZE];
     memset(an,0,UDP_BUFFER_SIZE);
     int anslen = UDP_BUFFER_SIZE;
     int res;
 
-    res = res_query(full_hostname, MESSAGE_C_IN, MESSAGE_T_A, an, anslen);
+    // Now do DNS request for a type "A" record
+    ESP_LOGI(TAG, "");
+    ESP_LOGI(TAG, "...Start of res_query for A records");
+
+    res = res_query(full_hostname_1, MESSAGE_C_IN, MESSAGE_T_A, an, anslen);
     ESP_LOGI(TAG, "...length of returned buffer is %d", res);
     print_buf(an,res);
     ESP_LOGI(TAG, "...End res_query for type A records");
     vTaskDelay(1000 / portTICK_PERIOD_MS);
 
-    // Now try for an SRV record
-
+    // Now do an SRV record
     ESP_LOGI(TAG, "");
     ESP_LOGI(TAG, "...Start of res_query for SRV records");
-
     memset(an,0,100); // reset an to zero
-    res = res_query(full_hostname_1, MESSAGE_C_IN, MESSAGE_T_SRV, an, anslen);
 
+    res = res_query(full_hostname_2, MESSAGE_C_IN, MESSAGE_T_SRV, an, anslen);
     ESP_LOGI(TAG, "...length of res_query returned buffer %d", res);
     print_buf(an,res);
     ESP_LOGI(TAG, "...End res_query for SRV records");
@@ -256,11 +267,11 @@ void wifi_init_sta(void)
 
     ESP_LOGI(TAG, "\n");
     ESP_LOGI(TAG, ".Begin gethostbyname");
-    hp = gethostbyname(full_hostname);
+    hp = gethostbyname(full_hostname_1);
 
     ip4_addr = (struct ip4_addr *)hp->h_addr_list[0];
 
-    ESP_LOGI(TAG, "...Gathering DNS records for %s ", full_hostname);
+    ESP_LOGI(TAG, "...Gathering DNS records for %s ", full_hostname_1);
     ESP_LOGI(TAG, "...Address No. 0 from DNS: " IPSTR, IP2STR(ip4_addr));
 
     ESP_LOGI(TAG, "Done with connection... Now shutdown handlers");

@@ -1,5 +1,5 @@
 @mainpage
-# Example of obtaining "A" type DNS records via WiFi
+# Example of obtaining "A" and SRV type DNS records via WiFi
 
 (See the README.md file in the upper level Espressif 'examples' directory for more information about examples.)
 
@@ -59,213 +59,159 @@ Note that the output, in particular the order of the output, may vary depending 
 
 Console output if station connects to AP successfully:
 ```
-I (2093) wifi station: .Information on Netif connection
-I (2103) wifi station: ...Netif is running
-I (2103) wifi station: ...Current IP from netif      : 192.168.1.20
-I (2113) wifi station: ...Current netmask from netif : 255.255.255.0
-I (2123) wifi station: ...Current gateway from netif : 192.168.1.1
-I (2123) wifi station: ...Current Hostname from netif: espressif
-I (2133) wifi station: ...Name Server Primary (netif): 192.168.1.1
-I (2143) wifi station: ...Name Server Sec (netif)    : 0.0.0.0
-I (2143) wifi station: ...Name Serv Fallback (netif) : 0.0.0.0
-I (2153) wifi station: ...Name Server DNS Max        : 0.0.0.0
-I (2163) wifi station:
 
-I (2163) wifi station: .Initialize the Resolver
-I (2173) resolv init : ...dnsserver is                : 8.8.8.8
-I (2173) resolv init : ...udp connected to            : 8.8.8.8
-I (2183) wifi station: ...Returned from resolver init
-I (2183) wifi station: ...DNS server from resolv_getserver is: 8.8.8.8
-I (2193) wifi station: ...IP address from resolv_lookup not found
-I (2203) res_query:
-I (2203) res_query: .Begin res_query function
-I (2213) res_query: ...query sent to DNS server
-I (2533) resolv_recv : ...resolv_recv function called
-I (2533) resolv_recv : ....Buffer length from tot_len is 49
-I (2533) resolv_recv : ...ID 99
-I (2543) resolv_recv : ...Query 128
-I (2543) resolv_recv : ...Error 0
-I (2553) resolv_recv : ...Num questions 1, answers 1, authrr 0, extrarr 0
-I (2613) res_query: ...payload length from parse = 49
-I (2613) wifi station: ...length of returned buffer is 49
-I (2613) print_buf   : ....1 Hex in received buffer   : 0
-I (2613) print_buf   : ....2 Letter in received buffer: c
-I (2623) print_buf   : ....3 Hex in received buffer   : 81
-I (2623) print_buf   : ....4 Hex in received buffer   : 80
-I (2633) print_buf   : ....5 Hex in received buffer   : 0
-I (2643) print_buf   : ....6 Hex in received buffer   : 1
-I (2643) print_buf   : ....7 Hex in received buffer   : 0
-I (2653) print_buf   : ....8 Hex in received buffer   : 1
-I (2663) print_buf   : ....9 Hex in received buffer   : 0
-I (2663) print_buf   : ....10 Hex in received buffer   : 0
-I (2673) print_buf   : ....11 Hex in received buffer   : 0
-I (2673) print_buf   : ....12 Hex in received buffer   : 0
-I (2683) print_buf   : ....13 Hex in received buffer   : 4
-I (2693) print_buf   : ....14 Letter in received buffer: x
-I (2693) print_buf   : ....15 Letter in received buffer: m
-I (2703) print_buf   : ....16 Letter in received buffer: p
-I (2703) print_buf   : ....17 Letter in received buffer: p
-I (2713) print_buf   : ....18 Hex in received buffer   : 7
-I (2723) print_buf   : ....19 Letter in received buffer: d
-I (2723) print_buf   : ....20 Letter in received buffer: i
-I (2733) print_buf   : ....21 Letter in received buffer: s
-I (2743) print_buf   : ....22 Letter in received buffer: m
-I (2743) print_buf   : ....23 Letter in received buffer: a
-I (2753) print_buf   : ....24 Letter in received buffer: i
-I (2753) print_buf   : ....25 Letter in received buffer: l
-I (2763) print_buf   : ....26 Hex in received buffer   : 2
-I (2773) print_buf   : ....27 Letter in received buffer: d
-I (2773) print_buf   : ....28 Letter in received buffer: e
-I (2783) print_buf   : ....29 Hex in received buffer   : 0
-I (2783) print_buf   : ....30 Hex in received buffer   : 0
-I (2793) print_buf   : ....31 Hex in received buffer   : 1
-I (2803) print_buf   : ....32 Hex in received buffer   : 0
-I (2803) print_buf   : ....33 Hex in received buffer   : 1
-I (2813) print_buf   : ....34 Hex in received buffer   : C0
-I (2823) print_buf   : ....35 Hex in received buffer   : C
-I (2823) print_buf   : ....36 Hex in received buffer   : 0
-I (2833) print_buf   : ....37 Hex in received buffer   : 1
-I (2833) print_buf   : ....38 Hex in received buffer   : 0
-I (2843) print_buf   : ....39 Hex in received buffer   : 1
-I (2853) print_buf   : ....40 Hex in received buffer   : 0
-I (2853) print_buf   : ....41 Hex in received buffer   : 0
-I (2863) print_buf   : ....42 Hex in received buffer   : 7
-I (2863) print_buf   : ....43 Hex in received buffer   : 7
-I (2873) print_buf   : ....44 Hex in received buffer   : 0
-I (2883) print_buf   : ....45 Hex in received buffer   : 4
-I (2883) print_buf   : ....46 Letter in received buffer: t
-I (2893) print_buf   : ....47 Hex in received buffer   : CB
-I (2903) print_buf   : ....48 Hex in received buffer   : 3
-I (2903) print_buf   : ....49 Hex in received buffer   : FD
-I (2913) wifi station: ...End res_query for type A records
-I (3913) wifi station:
-I (3913) wifi station: ...Start of res_query for SRV records
-I (3913) res_query:
-I (3913) res_query: .Begin res_query function
-I (3923) res_query: ...query sent to DNS server
-I (4173) resolv_recv : ...resolv_recv function called
-I (4173) resolv_recv : ....Buffer length from tot_len is 81
-I (4173) resolv_recv : ...ID 99
-I (4183) resolv_recv : ...Query 128
-I (4183) resolv_recv : ...Error 0
-I (4183) resolv_recv : ...Num questions 1, answers 1, authrr 0, extrarr 0
-I (4323) res_query: ...payload length from parse = 81
-I (4323) wifi station: ...length of res_query returned buffer 81
-I (4323) print_buf   : ....1 Hex in received buffer   : 0
-I (4323) print_buf   : ....2 Letter in received buffer: c
-I (4333) print_buf   : ....3 Hex in received buffer   : 81
-I (4343) print_buf   : ....4 Hex in received buffer   : 80
-I (4343) print_buf   : ....5 Hex in received buffer   : 0
-I (4353) print_buf   : ....6 Hex in received buffer   : 1
-I (4353) print_buf   : ....7 Hex in received buffer   : 0
-I (4363) print_buf   : ....8 Hex in received buffer   : 1
-I (4373) print_buf   : ....9 Hex in received buffer   : 0
-I (4373) print_buf   : ....10 Hex in received buffer   : 0
-I (4383) print_buf   : ....11 Hex in received buffer   : 0
-I (4383) print_buf   : ....12 Hex in received buffer   : 0
-I (4393) print_buf   : ....13 Hex in received buffer   : C
-I (4403) print_buf   : ....14 Hex in received buffer   : 5F
-I (4403) print_buf   : ....15 Letter in received buffer: x
-I (4413) print_buf   : ....16 Letter in received buffer: m
-I (4423) print_buf   : ....17 Letter in received buffer: p
-I (4423) print_buf   : ....18 Letter in received buffer: p
-I (4433) print_buf   : ....19 Hex in received buffer   : 2D
-I (4433) print_buf   : ....20 Letter in received buffer: c
-I (4443) print_buf   : ....21 Letter in received buffer: l
-I (4453) print_buf   : ....22 Letter in received buffer: i
-I (4453) print_buf   : ....23 Letter in received buffer: e
-I (4463) print_buf   : ....24 Letter in received buffer: n
-I (4463) print_buf   : ....25 Letter in received buffer: t
-I (4473) print_buf   : ....26 Hex in received buffer   : 4
-I (4483) print_buf   : ....27 Hex in received buffer   : 5F
-I (4483) print_buf   : ....28 Letter in received buffer: t
-I (4493) print_buf   : ....29 Letter in received buffer: c
-I (4503) print_buf   : ....30 Letter in received buffer: p
-I (4503) print_buf   : ....31 Hex in received buffer   : 7
-I (4513) print_buf   : ....32 Letter in received buffer: d
-I (4513) print_buf   : ....33 Letter in received buffer: i
-I (4523) print_buf   : ....34 Letter in received buffer: s
-I (4533) print_buf   : ....35 Letter in received buffer: m
-I (4533) print_buf   : ....36 Letter in received buffer: a
-I (4543) print_buf   : ....37 Letter in received buffer: i
-I (4553) print_buf   : ....38 Letter in received buffer: l
-I (4553) print_buf   : ....39 Hex in received buffer   : 2
-I (4563) print_buf   : ....40 Letter in received buffer: d
-I (4563) print_buf   : ....41 Letter in received buffer: e
-I (4573) print_buf   : ....42 Hex in received buffer   : 0
-I (4583) print_buf   : ....43 Hex in received buffer   : 0
-I (4583) print_buf   : ....44 Hex in received buffer   : 21
-I (4593) print_buf   : ....45 Hex in received buffer   : 0
-I (4593) print_buf   : ....46 Hex in received buffer   : 1
-I (4603) print_buf   : ....47 Hex in received buffer   : C0
-I (4613) print_buf   : ....48 Hex in received buffer   : C
-I (4613) print_buf   : ....49 Hex in received buffer   : 0
-I (4623) print_buf   : ....50 Hex in received buffer   : 21
-I (4633) print_buf   : ....51 Hex in received buffer   : 0
-I (4633) print_buf   : ....52 Hex in received buffer   : 1
-I (4643) print_buf   : ....53 Hex in received buffer   : 0
-I (4643) print_buf   : ....54 Hex in received buffer   : 0
-I (4653) print_buf   : ....55 Hex in received buffer   : 7
-I (4663) print_buf   : ....56 Hex in received buffer   : 7
-I (4663) print_buf   : ....57 Hex in received buffer   : 0
-I (4673) print_buf   : ....58 Hex in received buffer   : 17
-I (4673) print_buf   : ....59 Hex in received buffer   : 0
-I (4683) print_buf   : ....60 Hex in received buffer   : A
-I (4693) print_buf   : ....61 Hex in received buffer   : 0
-I (4693) print_buf   : ....62 Hex in received buffer   : 0
-I (4703) print_buf   : ....63 Hex in received buffer   : 14
-I (4713) print_buf   : ....64 Letter in received buffer: f
-I (4713) print_buf   : ....65 Hex in received buffer   : 4
-I (4723) print_buf   : ....66 Letter in received buffer: x
-I (4723) print_buf   : ....67 Letter in received buffer: m
-I (4733) print_buf   : ....68 Letter in received buffer: p
-I (4743) print_buf   : ....69 Letter in received buffer: p
-I (4743) print_buf   : ....70 Hex in received buffer   : 7
-I (4753) print_buf   : ....71 Letter in received buffer: d
-I (4763) print_buf   : ....72 Letter in received buffer: i
-I (4763) print_buf   : ....73 Letter in received buffer: s
-I (4773) print_buf   : ....74 Letter in received buffer: m
-I (4773) print_buf   : ....75 Letter in received buffer: a
-I (4783) print_buf   : ....76 Letter in received buffer: i
-I (4793) print_buf   : ....77 Letter in received buffer: l
-I (4793) print_buf   : ....78 Hex in received buffer   : 2
-I (4803) print_buf   : ....79 Letter in received buffer: d
-I (4803) print_buf   : ....80 Letter in received buffer: e
-I (4813) print_buf   : ....81 Hex in received buffer   : 0
-I (4823) wifi station: ...End res_query for SRV records
-I (4823) wifi station:
+I (2090) wifi station: .Information on Netif connection
+I (2100) wifi station: ...Netif is running
+I (2100) wifi station: ...Current IP from netif      : 192.168.1.20
+I (2110) wifi station: ...Current Hostname from netif: espressif
+I (2120) wifi station: ...Name Server Primary (netif): 192.168.1.1
+I (2120) wifi station:
 
-I (4833) wifi station: .Begin Resolv Query
-I (4833) resolv_query: ...entered resolv query. The name is xmpp.dismail.de
-I (4843) resolv_query: ...build entry for             : xmpp.dismail.de
-I (4853) resolv_query: ...Created record at seq no    : 0
-I (4853) resolv_query: ...Record name is              : xmpp.dismail.de
-I (4863) resolv_query: ...Record state is             : 1
-I (4873) resolv_query: ...Record IP address           : 0.0.0.0
-I (4873) wifi station:
+I (2130) wifi station: .Initialize the Resolver
+I (2130) resolv init : ...udp connected to: 8.8.8.8
+I (2140) wifi station:
+I (2140) wifi station: ...Start of res_query for A records
+I (2150) res_query   : ...query sent to DNS server
+I (2550) wifi station: ...length of returned buffer is 49
+I (2550) print_buf   : ....1 Hex in received buffer   : 0
+I (2550) print_buf   : ....2 Letter in received buffer: c
+I (2550) print_buf   : ....3 Hex in received buffer   : 81
+I (2560) print_buf   : ....4 Hex in received buffer   : 80
+I (2560) print_buf   : ....5 Hex in received buffer   : 0
+I (2570) print_buf   : ....6 Hex in received buffer   : 1
+I (2580) print_buf   : ....7 Hex in received buffer   : 0
+I (2580) print_buf   : ....8 Hex in received buffer   : 1
+I (2590) print_buf   : ....9 Hex in received buffer   : 0
+I (2600) print_buf   : ....10 Hex in received buffer   : 0
+I (2600) print_buf   : ....11 Hex in received buffer   : 0
+I (2610) print_buf   : ....12 Hex in received buffer   : 0
+I (2610) print_buf   : ....13 Hex in received buffer   : 4
+I (2620) print_buf   : ....14 Letter in received buffer: x
+I (2630) print_buf   : ....15 Letter in received buffer: m
+I (2630) print_buf   : ....16 Letter in received buffer: p
+I (2640) print_buf   : ....17 Letter in received buffer: p
+I (2640) print_buf   : ....18 Hex in received buffer   : 7
+I (2650) print_buf   : ....19 Letter in received buffer: d
+I (2660) print_buf   : ....20 Letter in received buffer: i
+I (2660) print_buf   : ....21 Letter in received buffer: s
+I (2670) print_buf   : ....22 Letter in received buffer: m
+I (2680) print_buf   : ....23 Letter in received buffer: a
+I (2680) print_buf   : ....24 Letter in received buffer: i
+I (2690) print_buf   : ....25 Letter in received buffer: l
+I (2690) print_buf   : ....26 Hex in received buffer   : 2
+I (2700) print_buf   : ....27 Letter in received buffer: d
+I (2710) print_buf   : ....28 Letter in received buffer: e
+I (2710) print_buf   : ....29 Hex in received buffer   : 0
+I (2720) print_buf   : ....30 Hex in received buffer   : 0
+I (2720) print_buf   : ....31 Hex in received buffer   : 1
+I (2730) print_buf   : ....32 Hex in received buffer   : 0
+I (2740) print_buf   : ....33 Hex in received buffer   : 1
+I (2740) print_buf   : ....34 Hex in received buffer   : C0
+I (2750) print_buf   : ....35 Hex in received buffer   : C
+I (2760) print_buf   : ....36 Hex in received buffer   : 0
+I (2760) print_buf   : ....37 Hex in received buffer   : 1
+I (2770) print_buf   : ....38 Hex in received buffer   : 0
+I (2770) print_buf   : ....39 Hex in received buffer   : 1
+I (2780) print_buf   : ....40 Hex in received buffer   : 0
+I (2790) print_buf   : ....41 Hex in received buffer   : 0
+I (2790) print_buf   : ....42 Hex in received buffer   : 7
+I (2800) print_buf   : ....43 Hex in received buffer   : 7
+I (2800) print_buf   : ....44 Hex in received buffer   : 0
+I (2810) print_buf   : ....45 Hex in received buffer   : 4
+I (2820) print_buf   : ....46 Letter in received buffer: t
+I (2820) print_buf   : ....47 Hex in received buffer   : CB
+I (2830) print_buf   : ....48 Hex in received buffer   : 3
+I (2840) print_buf   : ....49 Hex in received buffer   : FD
+I (2840) wifi station: ...End res_query for type A records
+I (3850) wifi station:
+I (3850) wifi station: ...Start of res_query for SRV records
+I (3850) res_query   : ...query sent to DNS server
+I (4250) wifi station: ...length of res_query returned buffer 81
+I (4250) print_buf   : ....1 Hex in received buffer   : 0
+I (4250) print_buf   : ....2 Letter in received buffer: c
+I (4250) print_buf   : ....3 Hex in received buffer   : 81
+I (4260) print_buf   : ....4 Hex in received buffer   : 80
+I (4270) print_buf   : ....5 Hex in received buffer   : 0
+I (4270) print_buf   : ....6 Hex in received buffer   : 1
+I (4280) print_buf   : ....7 Hex in received buffer   : 0
+I (4280) print_buf   : ....8 Hex in received buffer   : 1
+I (4290) print_buf   : ....9 Hex in received buffer   : 0
+I (4300) print_buf   : ....10 Hex in received buffer   : 0
+I (4300) print_buf   : ....11 Hex in received buffer   : 0
+I (4310) print_buf   : ....12 Hex in received buffer   : 0
+I (4310) print_buf   : ....13 Hex in received buffer   : C
+I (4320) print_buf   : ....14 Hex in received buffer   : 5F
+I (4330) print_buf   : ....15 Letter in received buffer: x
+I (4330) print_buf   : ....16 Letter in received buffer: m
+I (4340) print_buf   : ....17 Letter in received buffer: p
+I (4350) print_buf   : ....18 Letter in received buffer: p
+I (4350) print_buf   : ....19 Hex in received buffer   : 2D
+I (4360) print_buf   : ....20 Letter in received buffer: c
+I (4360) print_buf   : ....21 Letter in received buffer: l
+I (4370) print_buf   : ....22 Letter in received buffer: i
+I (4380) print_buf   : ....23 Letter in received buffer: e
+I (4380) print_buf   : ....24 Letter in received buffer: n
+I (4390) print_buf   : ....25 Letter in received buffer: t
+I (4390) print_buf   : ....26 Hex in received buffer   : 4
+I (4400) print_buf   : ....27 Hex in received buffer   : 5F
+I (4410) print_buf   : ....28 Letter in received buffer: t
+I (4410) print_buf   : ....29 Letter in received buffer: c
+I (4420) print_buf   : ....30 Letter in received buffer: p
+I (4430) print_buf   : ....31 Hex in received buffer   : 7
+I (4430) print_buf   : ....32 Letter in received buffer: d
+I (4440) print_buf   : ....33 Letter in received buffer: i
+I (4440) print_buf   : ....34 Letter in received buffer: s
+I (4450) print_buf   : ....35 Letter in received buffer: m
+I (4460) print_buf   : ....36 Letter in received buffer: a
+I (4460) print_buf   : ....37 Letter in received buffer: i
+I (4470) print_buf   : ....38 Letter in received buffer: l
+I (4470) print_buf   : ....39 Hex in received buffer   : 2
+I (4480) print_buf   : ....40 Letter in received buffer: d
+I (4490) print_buf   : ....41 Letter in received buffer: e
+I (4490) print_buf   : ....42 Hex in received buffer   : 0
+I (4500) print_buf   : ....43 Hex in received buffer   : 0
+I (4510) print_buf   : ....44 Hex in received buffer   : 21
+I (4510) print_buf   : ....45 Hex in received buffer   : 0
+I (4520) print_buf   : ....46 Hex in received buffer   : 1
+I (4530) print_buf   : ....47 Hex in received buffer   : C0
+I (4530) print_buf   : ....48 Hex in received buffer   : C
+I (4540) print_buf   : ....49 Hex in received buffer   : 0
+I (4540) print_buf   : ....50 Hex in received buffer   : 21
+I (4550) print_buf   : ....51 Hex in received buffer   : 0
+I (4560) print_buf   : ....52 Hex in received buffer   : 1
+I (4560) print_buf   : ....53 Hex in received buffer   : 0
+I (4570) print_buf   : ....54 Hex in received buffer   : 0
+I (4570) print_buf   : ....55 Hex in received buffer   : 7
+I (4580) print_buf   : ....56 Hex in received buffer   : 7
+I (4590) print_buf   : ....57 Hex in received buffer   : 0
+I (4590) print_buf   : ....58 Hex in received buffer   : 17
+I (4600) print_buf   : ....59 Hex in received buffer   : 0
+I (4600) print_buf   : ....60 Hex in received buffer   : A
+I (4610) print_buf   : ....61 Hex in received buffer   : 0
+I (4620) print_buf   : ....62 Hex in received buffer   : 0
+I (4620) print_buf   : ....63 Hex in received buffer   : 14
+I (4630) print_buf   : ....64 Letter in received buffer: f
+I (4640) print_buf   : ....65 Hex in received buffer   : 4
+I (4640) print_buf   : ....66 Letter in received buffer: x
+I (4650) print_buf   : ....67 Letter in received buffer: m
+I (4650) print_buf   : ....68 Letter in received buffer: p
+I (4660) print_buf   : ....69 Letter in received buffer: p
+I (4670) print_buf   : ....70 Hex in received buffer   : 7
+I (4670) print_buf   : ....71 Letter in received buffer: d
+I (4680) print_buf   : ....72 Letter in received buffer: i
+I (4680) print_buf   : ....73 Letter in received buffer: s
+I (4690) print_buf   : ....74 Letter in received buffer: m
+I (4700) print_buf   : ....75 Letter in received buffer: a
+I (4700) print_buf   : ....76 Letter in received buffer: i
+I (4710) print_buf   : ....77 Letter in received buffer: l
+I (4720) print_buf   : ....78 Hex in received buffer   : 2
+I (4720) print_buf   : ....79 Letter in received buffer: d
+I (4730) print_buf   : ....80 Letter in received buffer: e
+I (4730) print_buf   : ....81 Hex in received buffer   : 0
+I (4740) wifi station: ...End res_query for SRV records
+I (4750) wifi station:
 
-I (4883) wifi station: .Begin Check Entries
-I (4883) chck_entries: ...begin check entries
-I (4893) chck_entries: ...query sent to DNS server
-I (4893) wifi station: .Begin Wait
-I (4923) resolv_recv : ...resolv_recv function called
-I (4923) resolv_recv : ....Buffer length from tot_len is 49
-I (4923) resolv_recv : ...ID 0
-I (4923) resolv_recv : ...Query 128
-I (4923) resolv_recv : ...Error 0
-I (4933) resolv_recv : ...Num questions 1, answers 1, authrr 0, extrarr 0
-I (4943) resolv_recv : ...Answer IP using memcpy             : 116.203.3.253
-
-I (4943) sti_cb     : ...DNS information for xmpp.dismail.de IP is: 116.203.3.253
-I (5893) wifi station:
-
-I (5893) wifi station: .END Wait
-I (5893) wifi station: ...Check for ip address from table
-I (5893) wifi station: ...IP address from resolv_lookup is: 116.203.3.253
-I (5903) wifi station:
-
-I (5903) wifi station: .Begin gethostbyname
-I (6123) wifi station: ...Gathering DNS records for xmpp.dismail.de
-I (6123) wifi station: ...Address No. 0 from DNS: 116.203.3.253
-I (6123) wifi station: ...Address No. 1 from DNS was null
-I (6133) wifi station: Done with connection... Now shutdown handlers
+I (4750) wifi station: .Begin gethostbyname
+I (4940) wifi station: ...Gathering DNS records for xmpp.dismail.de
+I (4940) wifi station: ...Address No. 0 from DNS: 116.203.3.253
+I (4940) wifi station: Done with connection... Now shutdown handlers
