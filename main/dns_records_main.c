@@ -63,7 +63,7 @@
 #endif
 
 #ifdef CONFIG_PRIMARY_DNS_SERVER
-#define PRIMARY_DNS_SERVER  CONFIG_PRIMARY_DNS_SERVER
+#define EXAMPLE_PRIMARY_DNS_SERVER  CONFIG_PRIMARY_DNS_SERVER
 #else
 #define EXAMPLE_PRIMARY_DNS_SERVER "8.8.8.8"
 #endif
@@ -215,10 +215,12 @@ void wifi_init_sta(void)
     esp_netif_get_dns_info(esp_netif_handle, ask_for_primary, &dns_info);
     ESP_LOGI(TAG, "...Name Server Primary (netif): " IPSTR, IP2STR(&dns_info.ip.u_addr.ip4));
 
-    err_t ret;
+    /* Use this code if you want the discovered DNS server to be used. Usually, other
+      * DNS servers are faster.
     ip_addr_t dnsserver_ip_addr;
     dnsserver_ip_addr.type = IPADDR_TYPE_V4;
     dnsserver_ip_addr.u_addr.ip4.addr = dns_info.ip.u_addr.ip4.addr;
+    */
 
     ip_addr_t primary_dns_server;
     primary_dns_server.type = IPADDR_TYPE_V4;
@@ -227,6 +229,7 @@ void wifi_init_sta(void)
     ESP_LOGI(TAG, "\n");
     ESP_LOGI(TAG, ".Initialize the Resolver");
 
+    err_t ret;
     //ret = resolv_init(&dnsserver_ip_addr);
     ret = resolv_init(&primary_dns_server);
     if (ret < 0 ){
